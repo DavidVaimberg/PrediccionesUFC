@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predicciones UFC</title>
+  
+  <nav style="background:#111; padding:10px; text-align:center;">
+    <a href="stats.html" style="color:white; margin:0 15px;">📊 Estadísticas</a>
+    <a href="historial.html" style="color:white; margin:0 15px;">📁 Historial</a>
+  </nav>
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; margin: 20px; }
+    h1, h2 { text-align: center; }
+    .fight, .login-box, .panel-box, .admin-box, .ranking-box { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+    label { margin-right: 15px; }
+    .section { max-width: 800px; margin: auto; }
+    .submit-btn { display: block; margin: 20px auto; padding: 10px 20px; font-size: 16px; }
+    .method { margin-top: 10px; }
+    .hidden { display: none; }
+    input[type="text"], input[type="password"], select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #eee; }
+    .acierto { background-color: #d4edda; }
+    .fallo { background-color: #f8d7da; }
+  </style>
+</head>
+<body>
+  <h1>Predicciones UFC</h1>
+
+  <div class="section" id="login-section">
+    <div class="login-box">
+      <h2>Iniciar sesión</h2>
+      <label for="username">Usuario:</label>
+      <input type="text" id="username">
+      <label for="password">Contraseña:</label>
+      <input type="password" id="password">
+      <label for="event-selector">Selecciona evento:</label>
+      <select id="event-selector">
+        <option value="ufc304">UFC 304 - Whittaker vs de Ridder</option>
+        <option value="ufcApex108">UFC Apex 108 - Taira vs Park</option>
+        <option value="ufcApex109">UFC Apex 109 - Dolidze vs Hernandez</option>
+      </select>
+      <button onclick="login()">Entrar</button>
+      <button onclick="localStorage.clear(); alert('Datos borrados'); location.reload();" style="margin-top: 10px;">🔄 Borrar LocalStorage</button>
+    </div>
+  </div>
+
+  <div class="section hidden" id="prediction-section">
+    <h2 id="welcome-user"></h2>
+    <div id="fight-list"></div>
+    <button class="submit-btn" id="submit-btn" onclick="submitPredictions()">Enviar Predicciones</button>
+  </div>
+
+  <div class="section hidden" id="panel-section">
+    <div class="panel-box">
+      <h2>Predicciones guardadas</h2>
+      <div id="no-predictions" style="text-align:center; display:none; color:#a00">No hay predicciones guardadas.</div>
+      <table id="prediction-table" style="display:none;">
+        <thead>
+          <tr><th>Pelea</th><th>Tipo</th><th>Ganador</th><th>Método</th><th>Puntos</th><th>✔️</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <h3 style="text-align:center">Total de puntos: <span id="total-points">0</span></h3>
+      <h3 style="text-align:center">Aciertos: <span id="aciertos">0</span> / <span id="total-pelea">0</span> (<span id="porcentaje">0</span>%)</h3>
+    </div>
+  </div>
+
+  <div class="section hidden" id="admin-section">
+    <div class="admin-box">
+      <h2>Panel Administrador - Confirmar Resultados</h2>
+      <div id="admin-fight-list"></div>
+      <button class="submit-btn" onclick="saveResults()">Guardar Resultados</button>
+      <button class="submit-btn" onclick="showRanking()">Ver Ranking de Jugadores</button>
+    </div>
+  </div>
+
+    <div class="section hidden" id="ranking-section">
+    <div class="ranking-box">
+      <h2>Ranking de Jugadores</h2>
+      <table>
+        <thead>
+          <tr><th>Jugador</th><th>Puntos Totales</th></tr>
+        </thead>
+        <tbody id="ranking-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+<script>
+const users = {
+  "lucia": "abcd",
+  "admin": "adminpass",
+  "prueba": "1"
+};
+
+const eventos = {
+  ufc304: {
+    nombre: "UFC 304 - Whittaker vs de Ridder",
+    peleas: [
+      { id: 1, tipo:'Preliminar', nombre:'Martin Buday vs Marcus Almeida' },
+      { id: 2, tipo:'Preliminar', nombre:'Steven Nguyen vs Mohammad Yahya' },
+      { id: 3, tipo:'Preliminar', nombre:'Billy Elekana vs Ibo Aslan' },
+      { id: 4, tipo:'Preliminar', nombre:'Amanda Ribas vs Tabatha Ricci' },
+      { id: 5, tipo:'Preliminar', nombre:'Davey Grant vs Da’Mon Blackshear' },
+      { id: 6, tipo:'Preliminar', nombre:'Muslim Salikhov vs Carlos Leal' },
+      { id: 7, tipo:'Preliminar', nombre:'Bryce Mitchell vs Said Nurmagomedov' },
+      { id: 8, tipo:'Main Card', nombre:'Bogdan Guskov vs Nikita Krylov', estelar: true },
+      { id: 9, tipo:'Main Card', nombre:'Asu Almabayev vs Jose Ochoa', estelar: true },
+      { id: 10, tipo:'Main Card', nombre:'Sharabutdin Magomedov vs Marc‑Andre Barriault', estelar: true },
+      { id: 11, tipo:'Main Card', nombre:'Petr Yan vs Marcus McGhee', estelar: true },
+      { id: 12, tipo:'Main Card', nombre:'Reinier de Ridder vs Robert Whittaker', estelar: true }
+    ]
+  },
+  ufcApex108: {
+    nombre: "UFC Fight Night: Taira vs Park",
+    peleas: [
+      { id: 1, tipo: 'Preliminar', nombre: 'Piera Rodriguez vs Ketlen Souza' },
+      { id: 2, tipo: 'Preliminar', nombre: 'Rafael Estevam vs Felipe Bunes' },
+      { id: 3, tipo: 'Preliminar', nombre: 'Austin Bashi vs John Yannis' },
+      { id: 4, tipo: 'Preliminar', nombre: 'Nick Klein vs Andrey Pulyaev' },
+      { id: 5, tipo: 'Preliminar', nombre: 'Rodolfo Vieira vs Tresean Gore' },
+      { id: 6, tipo: 'Preliminar', nombre: 'Rinya Nakamura vs Nathan Fletcher' },
+      { id: 7, tipo: 'Main Card', nombre: 'Danny Silva vs Kevin Vallejos', estelar: true },
+      { id: 8, tipo: 'Main Card', nombre: 'Neil Magny vs Elizeu Zaleski dos Santos', estelar: true },
+      { id: 9, tipo: 'Main Card', nombre: 'Karol Rosa vs Nora Cornolle', estelar: true },
+      { id: 10, tipo: 'Main Card', nombre: 'Elves Brener vs Esteban Ribovics', estelar: true },
+      { id: 11, tipo: 'Main Card', nombre: 'Mateusz Rębecki vs Chris Duncan', estelar: true },
+      { id: 12, tipo:'Main Card', nombre:'Tatsuro Taira vs Park Hyun-sung', estelar: true }
+    ]
+  },
+  ufcApex109: {
+    nombre: "UFC Fight Night: Dolidze vs Hernandez",
+    peleas: [
+      { id: 1, tipo: 'Preliminar', nombre: 'Gabriella Fernandes vs Julija Stoliarenko' },
+      { id: 2, tipo: 'Preliminar', nombre: 'Joselyne Edwards vs Priscila Cachoeira' },
+      { id: 3, tipo: 'Preliminar', nombre: 'Elijah Smith vs Toshiomi Kazama' },
+      { id: 4, tipo: 'Preliminar', nombre: 'Julius Walker vs Rafael Cerqueira' },
+      { id: 5, tipo: 'Preliminar', nombre: 'Eryk Anders vs Christian Leroy Duncan', estelar: true  },
+      { id: 6, tipo: 'Main Card', nombre: 'Miles Johns vs Jean Matsumoto', estelar: true  },
+      { id: 7, tipo: 'Main Card', nombre: 'Andre fili vs Christian Rodriguez', estelar: true },
+      { id: 8, tipo: 'Main Card', nombre: 'Iasmin Lucindo vs Angela Hill', estelar: true },
+      { id: 9, tipo: 'Preliminar', nombre: 'Alex perez vs Steve Erceg', estelar: true },
+      { id: 10, tipo: 'Main Card', nombre: 'Roman Dolidze vs Anthony Hernandez', estelar: true }
+    ]
+  }
+};
+
+let currentUser = null;
+let currentEvent = null;
+let isAdmin = false;
+
+function login() {
+  const user = document.getElementById('username').value.toLowerCase();
+  const pass = document.getElementById('password').value;
+  const event = document.getElementById('event-selector').value;
+  if (users[user] && users[user] === pass) {
+    currentUser = user;
+    currentEvent = event;
+    isAdmin = user === "admin";
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('prediction-section').classList.remove('hidden');
+    document.getElementById('welcome-user').innerText = `Bienvenido, ${user} (${eventos[event].nombre})`;
+
+    const pred = localStorage.getItem(`predicciones_${currentUser}_${currentEvent}`);
+    if (pred) {
+      document.getElementById('submit-btn').style.display = 'none';
+      showPanel();
+    } else {
+      renderFights();
+    }
+
+    if (isAdmin) {
+      document.getElementById('admin-section').classList.remove('hidden');
+      renderAdminPanel();
+    }
+  } else {
+    alert('Usuario o contraseña incorrectos');
+  }
+}
+
+function renderFights() {
+  const container = document.getElementById("fight-list");
+  container.innerHTML = '';
+  const fights = eventos[currentEvent].peleas;
+
+  fights.forEach(f => {
+    const div = document.createElement("div");
+    const requiereMetodo = f.estelar === true;
+
+    div.classList.add("fight");
+    div.innerHTML = `<strong>${f.nombre}</strong><br>
+      <label><input type="radio" name="fight_${f.id}" value="1"> Luchador A</label>
+      <label><input type="radio" name="fight_${f.id}" value="2"> Luchador B</label>
+      ${requiereMetodo ? `
+        <div class="method">
+          <label>Método de victoria:</label>
+          <select id="method_${f.id}">
+            <option value="">Selecciona...</option>
+            <option value="KO">KO</option>
+            <option value="Submisión">Submisión</option>
+            <option value="Decisión">Decisión</option>
+          </select>
+        </div>` : ''}`;
+    container.appendChild(div);
+  });
+}
+
+
+function submitPredictions() {
+  const predictions = [];
+  const fights = eventos[currentEvent].peleas;
+
+  for (let f of fights) {
+    const sel = document.querySelector(`input[name='fight_${f.id}']:checked`);
+    if (!sel) return alert("Debes completar todas las predicciones antes de enviarlas.");
+    const ganador = sel.value;
+    let metodo = null;
+
+    if (f.estelar === true) {
+      metodo = document.getElementById(`method_${f.id}`).value;
+      if (!metodo) return alert(`Debes seleccionar el método de victoria para la pelea "${f.nombre}".`);
+    }
+
+    predictions.push({ pelea: f.nombre, tipo: f.tipo, ganador, metodo });
+  }
+
+  localStorage.setItem(`predicciones_${currentUser}_${currentEvent}`, JSON.stringify(predictions));
+  alert("Predicciones guardadas correctamente.");
+  document.getElementById('submit-btn').style.display = 'none';
+  showPanel();
+}
+
+
+function showPanel() {
+  const data = JSON.parse(localStorage.getItem(`predicciones_${currentUser}_${currentEvent}`) || '[]');
+  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${currentEvent}`) || '{}');
+  const tbody = document.querySelector('#prediction-table tbody');
+  const table = document.getElementById('prediction-table');
+  const message = document.getElementById('no-predictions');
+  let total = 0, aciertos = 0;
+  tbody.innerHTML = '';
+
+  if (!data || data.length === 0) {
+    table.style.display = 'none';
+    message.style.display = 'block';
+  } else {
+    table.style.display = 'table';
+    message.style.display = 'none';
+    data.forEach(p => {
+      const resultado = resultados[p.pelea];
+      let puntos = 0;
+      let acertado = false;
+
+      if (resultado && String(resultado.ganador) === String(p.ganador)) {
+        acertado = true;
+        // Buscar la pelea original desde el objeto eventos para acceder a la propiedad estelar
+        const peleaOriginal = eventos[currentEvent].peleas.find(f => f.nombre === p.pelea);
+
+        if (peleaOriginal.tipo === 'Preliminar') {
+          puntos = 1;
+        } else if (peleaOriginal.tipo === 'Main Card') {
+          if (peleaOriginal.estelar === true) {
+            puntos = 2;
+            if (
+              resultado.metodo &&
+              resultado.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()
+            ) {
+              puntos += 1; // punto extra por acertar método
+            }
+          } else {
+            puntos = 2;
+          }
+        }
+
+        aciertos++;
+      }
+
+      total += puntos;
+      const rowClass = acertado ? 'acierto' : 'fallo';
+      const simbolo = acertado ? '✅' : '❌';
+      tbody.innerHTML += `
+        <tr class="${rowClass}">
+          <td>${p.pelea}</td>
+          <td>${p.tipo}</td>
+          <td>${p.ganador}</td>
+          <td>${p.metodo || '-'}</td>
+          <td>${puntos}</td>
+          <td style="text-align:center">${simbolo}</td>
+        </tr>`;
+    });
+
+    document.getElementById('total-points').innerText = total;
+    document.getElementById('aciertos').innerText = aciertos;
+    document.getElementById('total-pelea').innerText = data.length;
+    document.getElementById('porcentaje').innerText = ((aciertos / data.length) * 100).toFixed(1);
+  }
+
+  document.getElementById('panel-section').classList.remove('hidden');
+}
+
+
+function renderAdminPanel() {
+  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${currentEvent}`) || '{}');
+  const container = document.getElementById("admin-fight-list");
+  container.innerHTML = '';
+  const fights = eventos[currentEvent].peleas;
+  const lastFive = fights.slice(-5).map(f => f.id);
+
+  fights.forEach(f => {
+    const res = resultados[f.nombre] || {};
+    const requiereMetodo = lastFive.includes(f.id);
+
+    container.innerHTML += `
+      <div style="margin-bottom:15px">
+        <strong>${f.nombre}</strong><br>
+        <label><input type="radio" name="ganador_${f.id}" value="1" ${res.ganador==='1'?'checked':''}/> Luchador A</label>
+        <label><input type="radio" name="ganador_${f.id}" value="2" ${res.ganador==='2'?'checked':''}/> Luchador B</label>
+        ${requiereMetodo ? `
+          <br><label>Método:</label>
+          <select id="metodo_${f.id}">
+            <option value="">Selecciona...</option>
+            <option value="KO" ${res.metodo==='KO'?'selected':''}>KO</option>
+            <option value="Submisión" ${res.metodo==='Submisión'?'selected':''}>Submisión</option>
+            <option value="Decisión" ${res.metodo==='Decisión'?'selected':''}>Decisión</option>
+          </select>
+        ` : ''}
+      </div>`;
+  });
+}
+
+
+function saveResults() {
+  const results = {};
+  const fights = eventos[currentEvent].peleas;
+  const lastFive = fights.slice(-5).map(f => f.id);
+
+  fights.forEach(f => {
+    const ganador = document.querySelector(`input[name='ganador_${f.id}']:checked`);
+    if (ganador) {
+      results[f.nombre] = { ganador: ganador.value };
+      if (lastFive.includes(f.id)) {
+        results[f.nombre].metodo = document.getElementById(`metodo_${f.id}`).value;
+      }
+    }
+  });
+  localStorage.setItem(`resultados_confirmados_${currentEvent}`, JSON.stringify(results));
+  alert("Resultados guardados correctamente.");
+}
+
+
+function showRanking() {
+  const tbody = document.getElementById('ranking-body');
+  tbody.innerHTML = '';
+  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${currentEvent}`) || '{}');
+
+  Object.keys(users).forEach(user => {
+    if (user === "admin") return;
+    const data = JSON.parse(localStorage.getItem(`predicciones_${user}_${currentEvent}`) || '[]');
+    let total = 0;
+
+    data.forEach(p => {
+      const resultado = resultados[p.pelea];
+      const peleaOriginal = eventos[currentEvent].peleas.find(f => f.nombre === p.pelea);
+
+      if (resultado && peleaOriginal && String(resultado.ganador) === String(p.ganador)) {
+        if (peleaOriginal.tipo === 'Preliminar') {
+          total += 1;
+        } else if (peleaOriginal.tipo === 'Main Card') {
+          if (peleaOriginal.estelar === true) {
+            total += 2;
+            if (
+              resultado.metodo &&
+              resultado.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()
+            ) {
+              total += 1;
+            }
+          } else {
+            total += 2;
+          }
+        }
+      }
+    });
+
+    tbody.innerHTML += `<tr><td>${user}</td><td>${total}</td></tr>`;
+  });
+
+  document.getElementById('ranking-section').classList.remove('hidden');
+}
+
+
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de Predicciones</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+    h1, h2 { text-align: center; }
+    .content { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+    select { font-size: 16px; padding: 5px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #eee; }
+    .acierto { background-color: #d4edda; }
+    .fallo { background-color: #f8d7da; }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1>Historial de Predicciones</h1>
+
+    <label for="evento-select">Selecciona un evento:</label>
+    <select id="evento-select"></select>
+
+    <div id="tabla-container"></div>
+  </div>
+
+<script>
+const users = {
+  "lucia": "abcd",
+  "admin": "adminpass",
+  "prueba": "1"
+};
+
+const eventos = {
+  ufc304: "UFC 304 - Whittaker vs de Ridder",
+  ufcApex108: "UFC Apex 108 - Taira vs Park",
+  ufcApex109: "UFC Apex 109 - (Ejemplo)"
+};
+
+// Crear selector de eventos
+const selector = document.getElementById("evento-select");
+Object.entries(eventos).forEach(([key, name]) => {
+  const opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = name;
+  selector.appendChild(opt);
+});
+
+selector.addEventListener("change", mostrarHistorial);
+window.addEventListener("DOMContentLoaded", () => {
+  selector.value = Object.keys(eventos)[0];
+  mostrarHistorial();
+});
+
+function mostrarHistorial() {
+  const evento = selector.value;
+  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${evento}`) || '{}');
+  const container = document.getElementById("tabla-container");
+  let html = '';
+
+  Object.keys(users).forEach(user => {
+    if (user === "admin") return;
+
+    const predicciones = JSON.parse(localStorage.getItem(`predicciones_${user}_${evento}`) || '[]');
+    if (predicciones.length === 0) return;
+
+    html += `<h2>Usuario: ${user}</h2>`;
+    html += `<table>
+      <thead>
+        <tr><th>Pelea</th><th>Predicción</th><th>Método</th><th>Resultado</th><th>Método Real</th><th>✔️</th></tr>
+      </thead><tbody>`;
+
+    predicciones.forEach(p => {
+      const res = resultados[p.pelea];
+      const gano = res && String(res.ganador) === String(p.ganador);
+      const metodoCorrecto = res?.metodo?.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim();
+      const acierto = gano ? (metodoCorrecto ? '✅✅' : '✅') : '❌';
+
+      html += `<tr class="${gano ? 'acierto' : 'fallo'}">
+        <td>${p.pelea}</td>
+        <td>${p.ganador}</td>
+        <td>${p.metodo || '-'}</td>
+        <td>${res?.ganador || '-'}</td>
+        <td>${res?.metodo || '-'}</td>
+        <td>${acierto}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table><br>`;
+  });
+
+  container.innerHTML = html || '<p>No hay predicciones para este evento.</p>';
+}
+</script>
+
+</body>
+</html>
