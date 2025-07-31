@@ -84,7 +84,7 @@
     </div>
   </div>
 
-    <div class="section hidden" id="ranking-section">
+  <div class="section hidden" id="ranking-section">
     <div class="ranking-box">
       <h2>Ranking de Jugadores</h2>
       <table>
@@ -96,342 +96,285 @@
     </div>
   </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyASAZyQrO2m03A46_gILD_tyUenkRn3HXA",
-    authDomain: "prediccionesufc.firebaseapp.com",
-    projectId: "prediccionesufc",
-    storageBucket: "prediccionesufc.appspot.com",
-    messagingSenderId: "372069968923",
-    appId: "1:372069968923:web:cba4dc58e880214dc49cbe",
-    databaseURL: "https://prediccionesufc-default-rtdb.firebaseio.com"
-  };
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
 
-  firebase.initializeApp(firebaseConfig);
-</script>  
-  
-<script>
-const users = {
-  "david": "clave",
-  "esteban": "lebron",
-  "cabas": "curry13",
-  "pingon": "pinga",
-  "admin": "1"
-};
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyASAZyQrO2m03A46_gILD_tyUenkRn3HXA",
+      authDomain: "prediccionesufc.firebaseapp.com",
+      projectId: "prediccionesufc",
+      storageBucket: "prediccionesufc.appspot.com",
+      messagingSenderId: "372069968923",
+      appId: "1:372069968923:web:cba4dc58e880214dc49cbe"
+    };
 
-const eventos = {
-  ufc304: {
-    nombre: "UFC 304 - Whittaker vs de Ridder",
-    peleas: [
-      { id: 1, tipo:'Preliminar', nombre:'Martin Buday vs Marcus Almeida' },
-      { id: 2, tipo:'Preliminar', nombre:'Steven Nguyen vs Mohammad Yahya' },
-      { id: 3, tipo:'Preliminar', nombre:'Billy Elekana vs Ibo Aslan' },
-      { id: 4, tipo:'Preliminar', nombre:'Amanda Ribas vs Tabatha Ricci' },
-      { id: 5, tipo:'Preliminar', nombre:'Davey Grant vs Da’Mon Blackshear' },
-      { id: 6, tipo:'Preliminar', nombre:'Muslim Salikhov vs Carlos Leal' },
-      { id: 7, tipo:'Preliminar', nombre:'Bryce Mitchell vs Said Nurmagomedov' },
-      { id: 8, tipo:'Main Card', nombre:'Bogdan Guskov vs Nikita Krylov', estelar: true },
-      { id: 9, tipo:'Main Card', nombre:'Asu Almabayev vs Jose Ochoa', estelar: true },
-      { id: 10, tipo:'Main Card', nombre:'Sharabutdin Magomedov vs Marc‑Andre Barriault', estelar: true },
-      { id: 11, tipo:'Main Card', nombre:'Petr Yan vs Marcus McGhee', estelar: true },
-      { id: 12, tipo:'Main Card', nombre:'Reinier de Ridder vs Robert Whittaker', estelar: true }
-    ]
-  },
-  ufcApex108: {
-    nombre: "UFC Fight Night: Taira vs Park",
-    peleas: [
-      { id: 1, tipo: 'Preliminar', nombre: 'Piera Rodriguez vs Ketlen Souza' },
-      { id: 2, tipo: 'Preliminar', nombre: 'Rafael Estevam vs Felipe Bunes' },
-      { id: 3, tipo: 'Preliminar', nombre: 'Austin Bashi vs John Yannis' },
-      { id: 4, tipo: 'Preliminar', nombre: 'Nick Klein vs Andrey Pulyaev' },
-      { id: 5, tipo: 'Preliminar', nombre: 'Rodolfo Vieira vs Tresean Gore' },
-      { id: 6, tipo: 'Preliminar', nombre: 'Rinya Nakamura vs Nathan Fletcher' },
-      { id: 7, tipo: 'Main Card', nombre: 'Danny Silva vs Kevin Vallejos', estelar: true },
-      { id: 8, tipo: 'Main Card', nombre: 'Neil Magny vs Elizeu Zaleski dos Santos', estelar: true },
-      { id: 9, tipo: 'Main Card', nombre: 'Karol Rosa vs Nora Cornolle', estelar: true },
-      { id: 10, tipo: 'Main Card', nombre: 'Elves Brener vs Esteban Ribovics', estelar: true },
-      { id: 11, tipo: 'Main Card', nombre: 'Mateusz Rębecki vs Chris Duncan', estelar: true },
-      { id: 12, tipo:'Main Card', nombre:'Tatsuro Taira vs Park Hyun-sung', estelar: true }
-    ]
-  },
-  ufcApex109: {
-    nombre: "UFC Fight Night: Dolidze vs Hernandez",
-    peleas: [
-      { id: 1, tipo: 'Preliminar', nombre: 'Gabriella Fernandes vs Julija Stoliarenko' },
-      { id: 2, tipo: 'Preliminar', nombre: 'Joselyne Edwards vs Priscila Cachoeira' },
-      { id: 3, tipo: 'Preliminar', nombre: 'Elijah Smith vs Toshiomi Kazama' },
-      { id: 4, tipo: 'Preliminar', nombre: 'Julius Walker vs Rafael Cerqueira' },
-      { id: 5, tipo: 'Preliminar', nombre: 'Eryk Anders vs Christian Leroy Duncan', estelar: true  },
-      { id: 6, tipo: 'Main Card', nombre: 'Miles Johns vs Jean Matsumoto', estelar: true  },
-      { id: 7, tipo: 'Main Card', nombre: 'Andre fili vs Christian Rodriguez', estelar: true },
-      { id: 8, tipo: 'Main Card', nombre: 'Iasmin Lucindo vs Angela Hill', estelar: true },
-      { id: 9, tipo: 'Preliminar', nombre: 'Alex perez vs Steve Erceg', estelar: true },
-      { id: 10, tipo: 'Main Card', nombre: 'Roman Dolidze vs Anthony Hernandez', estelar: true }
-    ]
-  }
-};
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
 
-let currentUser = null;
-let currentEvent = null;
-let isAdmin = false;
+      const users = {
+      "david": "clave",
+      "esteban": "lebron",
+      "cabas": "curry13",
+      "pingon": "pinga",
+      "admin": "1"
+    };
 
-function login() {
-  const user = document.getElementById('username').value.toLowerCase();
-  const pass = document.getElementById('password').value;
-  const event = document.getElementById('event-selector').value;
-  if (users[user] && users[user] === pass) {
-    currentUser = user;
-    currentEvent = event;
-    isAdmin = user === "admin";
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('prediction-section').classList.remove('hidden');
-    document.getElementById('welcome-user').innerText = `Bienvenido, ${user} (${eventos[event].nombre})`;
+    let currentUser = null;
+    let currentEvent = null;
+    let isAdmin = false;
 
-    const pred = localStorage.getItem(`predicciones_${currentUser}_${currentEvent}`);
-    if (pred) {
-      document.getElementById('submit-btn').style.display = 'none';
-      showPanel();
-    } else {
-      renderFights();
-    }
+    function login() {
+      const user = document.getElementById('username').value.toLowerCase();
+      const pass = document.getElementById('password').value;
+      const event = document.getElementById('event-selector').value;
+      if (users[user] && users[user] === pass) {
+        currentUser = user;
+        currentEvent = event;
+        isAdmin = user === "admin";
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('prediction-section').classList.remove('hidden');
+        document.getElementById('welcome-user').innerText = `Bienvenido, ${user} (${eventos[event].nombre})`;
 
-    if (isAdmin) {
-      document.getElementById('admin-section').classList.remove('hidden');
-      renderAdminPanel();
-    }
-  } else {
-    alert('Usuario o contraseña incorrectos');
-  }
-}
-
-function renderFights() {
-  const container = document.getElementById("fight-list");
-  container.innerHTML = '';
-  const fights = eventos[currentEvent].peleas;
-
-  fights.forEach(f => {
-    const div = document.createElement("div");
-    const requiereMetodo = f.estelar === true;
-
-    div.classList.add("fight");
-    div.innerHTML = `<strong>${f.nombre}</strong><br>
-      <label><input type="radio" name="fight_${f.id}" value="1"> Luchador A</label>
-      <label><input type="radio" name="fight_${f.id}" value="2"> Luchador B</label>
-      ${requiereMetodo ? `
-        <div class="method">
-          <label>Método de victoria:</label>
-          <select id="method_${f.id}">
-            <option value="">Selecciona...</option>
-            <option value="KO">KO</option>
-            <option value="Submisión">Submisión</option>
-            <option value="Decisión">Decisión</option>
-          </select>
-        </div>` : ''}`;
-    container.appendChild(div);
-  });
-}
-
-
-async function submitPredictions() {
-  const predictions = [];
-  const fights = eventos[currentEvent].peleas;
-
-  for (let f of fights) {
-    const sel = document.querySelector(`input[name='fight_${f.id}']:checked`);
-    if (!sel) return alert("Debes completar todas las predicciones antes de enviarlas.");
-    const ganador = sel.value;
-    let metodo = null;
-
-    if (f.estelar === true) {
-      metodo = document.getElementById(`method_${f.id}`).value;
-      if (!metodo) return alert(`Debes seleccionar el método de victoria para la pelea "${f.nombre}".`);
-    }
-
-    predictions.push({ pelea: f.nombre, tipo: f.tipo, ganador, metodo });
-  }
-
-  try {
-    const db = firebase.database();
-    await db.ref(`predicciones/${currentEvent}/${currentUser}`).set(predictions);
-    alert("Predicciones guardadas correctamente.");
-    document.getElementById('submit-btn').style.display = 'none';
-    showPanel(); // Mostrar el panel como antes
-  } catch (error) {
-    console.error("Error al guardar en Firebase:", error);
-    alert("Hubo un problema al guardar. Inténtalo de nuevo.");
-  }
-}
-
-async function showPanel() {
-  const db = firebase.database();
-  const snapshotPred = await db.ref(`predicciones/${currentEvent}/${currentUser}`).get();
-  const snapshotRes = await db.ref(`resultados/${currentEvent}`).get();
-
-  const data = snapshotPred.val() || [];
-  const resultados = snapshotRes.val() || {};
-  const tbody = document.querySelector('#prediction-table tbody');
-  const table = document.getElementById('prediction-table');
-  const message = document.getElementById('no-predictions');
-  let total = 0, aciertos = 0;
-  tbody.innerHTML = '';
-
-  if (!data || data.length === 0) {
-    table.style.display = 'none';
-    message.style.display = 'block';
-  } else {
-    table.style.display = 'table';
-    message.style.display = 'none';
-    data.forEach(p => {
-      const resultado = resultados[p.pelea];
-      let puntos = 0;
-      let acertado = false;
-
-      if (resultado && String(resultado.ganador) === String(p.ganador)) {
-        acertado = true;
-        const peleaOriginal = eventos[currentEvent].peleas.find(f => f.nombre === p.pelea);
-        if (peleaOriginal.tipo === 'Preliminar') {
-          puntos = 1;
-        } else if (peleaOriginal.tipo === 'Main Card') {
-          if (peleaOriginal.estelar === true) {
-            puntos = 2;
-            if (
-              resultado.metodo &&
-              resultado.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()
-            ) {
-              puntos += 1;
-            }
+        db.collection("predicciones").doc(`${currentUser}_${currentEvent}`).get().then(doc => {
+          if (doc.exists) {
+            document.getElementById('submit-btn').style.display = 'none';
+            showPanel();
           } else {
-            puntos = 2;
+            renderFights();
+          }
+        });
+
+        if (isAdmin) {
+          document.getElementById('admin-section').classList.remove('hidden');
+          renderAdminPanel();
+        }
+      } else {
+        alert('Usuario o contraseña incorrectos');
+      }
+    }
+
+    function renderFights() {
+      const container = document.getElementById("fight-list");
+      container.innerHTML = '';
+      const fights = eventos[currentEvent].peleas;
+
+      fights.forEach(f => {
+        const div = document.createElement("div");
+        const requiereMetodo = f.estelar === true;
+
+        div.classList.add("fight");
+        div.innerHTML = `<strong>${f.nombre}</strong><br>
+          <label><input type="radio" name="fight_${f.id}" value="1"> Luchador A</label>
+          <label><input type="radio" name="fight_${f.id}" value="2"> Luchador B</label>
+          ${requiereMetodo ? `
+            <div class="method">
+              <label>Método de victoria:</label>
+              <select id="method_${f.id}">
+                <option value="">Selecciona...</option>
+                <option value="KO">KO</option>
+                <option value="Submisión">Submisión</option>
+                <option value="Decisión">Decisión</option>
+              </select>
+            </div>` : ''}`;
+        container.appendChild(div);
+      });
+    }
+
+    async function submitPredictions() {
+      const predictions = [];
+      const fights = eventos[currentEvent].peleas;
+
+      for (let f of fights) {
+        const sel = document.querySelector(`input[name='fight_${f.id}']:checked`);
+        if (!sel) return alert("Debes completar todas las predicciones antes de enviarlas.");
+        const ganador = sel.value;
+        let metodo = null;
+
+        if (f.estelar === true) {
+          metodo = document.getElementById(`method_${f.id}`).value;
+          if (!metodo) return alert(`Debes seleccionar el método de victoria para la pelea "${f.nombre}".`);
+        }
+
+        predictions.push({ pelea: f.nombre, tipo: f.tipo, ganador, metodo, estelar: f.estelar || false });
+      }
+
+      try {
+        await db.collection("predicciones").doc(`${currentUser}_${currentEvent}`).set({ datos: predictions });
+        alert("Predicciones guardadas correctamente.");
+        document.getElementById('submit-btn').style.display = 'none';
+        showPanel();
+      } catch (error) {
+        console.error("Error al guardar en Firestore:", error);
+        alert("Hubo un problema al guardar. Inténtalo de nuevo.");
+      }
+    }
+
+    async function showPanel() {
+      const predSnap = await db.collection("predicciones").doc(`${currentUser}_${currentEvent}`).get();
+      const resSnap = await db.collection("resultados").doc(currentEvent).get();
+
+      const data = predSnap.exists ? predSnap.data().datos : [];
+      const resultados = resSnap.exists ? resSnap.data() : {};
+      const tbody = document.querySelector('#prediction-table tbody');
+      const table = document.getElementById('prediction-table');
+      const message = document.getElementById('no-predictions');
+      let total = 0, aciertos = 0;
+      tbody.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        table.style.display = 'none';
+        message.style.display = 'block';
+      } else {
+        table.style.display = 'table';
+        message.style.display = 'none';
+        data.forEach(p => {
+          const resultado = resultados[p.pelea];
+          let puntos = 0;
+          let acertado = false;
+
+          if (resultado && String(resultado.ganador) === String(p.ganador)) {
+            acertado = true;
+            if (p.tipo === 'Preliminar') {
+              puntos = 1;
+            } else if (p.tipo === 'Main Card') {
+              if (p.estelar === true) {
+                puntos = 2;
+                if (
+                  resultado.metodo &&
+                  resultado.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()
+                ) {
+                  puntos += 1;
+                }
+              } else {
+                puntos = 2;
+              }
+            }
+            aciertos++;
+          }
+
+          total += puntos;
+          const rowClass = acertado ? 'acierto' : 'fallo';
+          const simbolo = acertado ? '✅' : '❌';
+          tbody.innerHTML += `
+            <tr class="${rowClass}">
+              <td>${p.pelea}</td>
+              <td>${p.tipo}</td>
+              <td>${p.ganador}</td>
+              <td>${p.metodo || '-'}</td>
+              <td>${puntos}</td>
+              <td style="text-align:center">${simbolo}</td>
+            </tr>`;
+        });
+
+        document.getElementById('total-points').innerText = total;
+        document.getElementById('aciertos').innerText = aciertos;
+        document.getElementById('total-pelea').innerText = data.length;
+        document.getElementById('porcentaje').innerText = ((aciertos / data.length) * 100).toFixed(1);
+      }
+
+      document.getElementById('panel-section').classList.remove('hidden');
+    }
+  </script>
+
+      function renderAdminPanel() {
+      db.collection("resultados").doc(currentEvent).get().then((doc) => {
+        const resultados = doc.exists ? doc.data() : {};
+        const container = document.getElementById("admin-fight-list");
+        container.innerHTML = '';
+        const fights = eventos[currentEvent].peleas;
+        const lastFive = fights.slice(-5).map(f => f.id);
+
+        fights.forEach(f => {
+          const res = resultados[f.nombre] || {};
+          const requiereMetodo = lastFive.includes(f.id);
+
+          container.innerHTML += `
+            <div style="margin-bottom:15px">
+              <strong>${f.nombre}</strong><br>
+              <label><input type="radio" name="ganador_${f.id}" value="1" ${res.ganador==='1'?'checked':''}/> Luchador A</label>
+              <label><input type="radio" name="ganador_${f.id}" value="2" ${res.ganador==='2'?'checked':''}/> Luchador B</label>
+              ${requiereMetodo ? `
+                <br><label>Método:</label>
+                <select id="metodo_${f.id}">
+                  <option value="">Selecciona...</option>
+                  <option value="KO" ${res.metodo==='KO'?'selected':''}>KO</option>
+                  <option value="Submisión" ${res.metodo==='Submisión'?'selected':''}>Submisión</option>
+                  <option value="Decisión" ${res.metodo==='Decisión'?'selected':''}>Decisión</option>
+                </select>
+              ` : ''}
+            </div>`;
+        });
+      });
+    }
+
+    async function saveResults() {
+      const fights = eventos[currentEvent].peleas;
+      const results = {};
+      const lastFive = fights.slice(-5).map(f => f.id);
+
+      fights.forEach(f => {
+        const ganador = document.querySelector(`input[name='ganador_${f.id}']:checked`);
+        if (ganador) {
+          results[f.nombre] = { ganador: ganador.value };
+          if (lastFive.includes(f.id)) {
+            results[f.nombre].metodo = document.getElementById(`metodo_${f.id}`).value;
           }
         }
-        aciertos++;
-      }
+      });
 
-      total += puntos;
-      const rowClass = acertado ? 'acierto' : 'fallo';
-      const simbolo = acertado ? '✅' : '❌';
-      tbody.innerHTML += `
-        <tr class="${rowClass}">
-          <td>${p.pelea}</td>
-          <td>${p.tipo}</td>
-          <td>${p.ganador}</td>
-          <td>${p.metodo || '-'}</td>
-          <td>${puntos}</td>
-          <td style="text-align:center">${simbolo}</td>
-        </tr>`;
-    });
-
-    document.getElementById('total-points').innerText = total;
-    document.getElementById('aciertos').innerText = aciertos;
-    document.getElementById('total-pelea').innerText = data.length;
-    document.getElementById('porcentaje').innerText = ((aciertos / data.length) * 100).toFixed(1);
-  }
-
-  document.getElementById('panel-section').classList.remove('hidden');
-}
-
-function renderAdminPanel() {
-  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${currentEvent}`) || '{}');
-  const container = document.getElementById("admin-fight-list");
-  container.innerHTML = '';
-  const fights = eventos[currentEvent].peleas;
-  const lastFive = fights.slice(-5).map(f => f.id);
-
-  fights.forEach(f => {
-    const res = resultados[f.nombre] || {};
-    const requiereMetodo = lastFive.includes(f.id);
-
-    container.innerHTML += `
-      <div style="margin-bottom:15px">
-        <strong>${f.nombre}</strong><br>
-        <label><input type="radio" name="ganador_${f.id}" value="1" ${res.ganador==='1'?'checked':''}/> Luchador A</label>
-        <label><input type="radio" name="ganador_${f.id}" value="2" ${res.ganador==='2'?'checked':''}/> Luchador B</label>
-        ${requiereMetodo ? `
-          <br><label>Método:</label>
-          <select id="metodo_${f.id}">
-            <option value="">Selecciona...</option>
-            <option value="KO" ${res.metodo==='KO'?'selected':''}>KO</option>
-            <option value="Submisión" ${res.metodo==='Submisión'?'selected':''}>Submisión</option>
-            <option value="Decisión" ${res.metodo==='Decisión'?'selected':''}>Decisión</option>
-          </select>
-        ` : ''}
-      </div>`;
-  });
-}
-
-
-async function saveResults() {
-  const db = firebase.database();
-  const fights = eventos[currentEvent].peleas;
-  const results = {};
-  const lastFive = fights.slice(-5).map(f => f.id);
-
-  fights.forEach(f => {
-    const ganador = document.querySelector(`input[name='ganador_${f.id}']:checked`);
-    if (ganador) {
-      results[f.nombre] = { ganador: ganador.value };
-      if (lastFive.includes(f.id)) {
-        results[f.nombre].metodo = document.getElementById(`metodo_${f.id}`).value;
+      try {
+        await db.collection("resultados").doc(currentEvent).set(results);
+        alert("Resultados guardados correctamente en Firebase.");
+      } catch (e) {
+        console.error("Error al guardar resultados:", e);
+        alert("Error al guardar resultados.");
       }
     }
-  });
 
-  try {
-    await db.ref(`resultados/${currentEvent}`).set(results);
-    alert("Resultados guardados correctamente en Firebase.");
-  } catch (e) {
-    console.error("Error al guardar resultados:", e);
-    alert("Error al guardar resultados.");
-  }
-}
+    async function showRanking() {
+      const resSnap = await db.collection("resultados").doc(currentEvent).get();
+      const resultados = resSnap.exists ? resSnap.data() : {};
+      const tbody = document.getElementById('ranking-body');
+      tbody.innerHTML = '';
 
+      for (const user of Object.keys(users)) {
+        if (user === "admin") continue;
+        const predSnap = await db.collection("predicciones").doc(`${user}_${currentEvent}`).get();
+        const data = predSnap.exists ? predSnap.data().datos : [];
+        let total = 0;
 
-async function showRanking() {
-  const db = firebase.database();
-  const snapshot = await db.ref(`resultados/${currentEvent}`).once('value');
-  const resultados = snapshot.val() || {};
+        data.forEach(p => {
+          const resultado = resultados[p.pelea];
+          const peleaOriginal = eventos[currentEvent].peleas.find(f => f.nombre === p.pelea);
 
-  const tbody = document.getElementById('ranking-body');
-  tbody.innerHTML = '';
-
-  Object.keys(users).forEach(user => {
-    if (user === "admin") return;
-    const data = JSON.parse(localStorage.getItem(`predicciones_${user}_${currentEvent}`) || '[]');
-    let total = 0;
-
-    data.forEach(p => {
-      const resultado = resultados[p.pelea];
-      const peleaOriginal = eventos[currentEvent].peleas.find(f => f.nombre === p.pelea);
-
-      if (resultado && peleaOriginal && String(resultado.ganador) === String(p.ganador)) {
-        if (peleaOriginal.tipo === 'Preliminar') {
-          total += 1;
-        } else if (peleaOriginal.tipo === 'Main Card') {
-          if (peleaOriginal.estelar === true) {
-            total += 2;
-            if (
-              resultado.metodo &&
-              resultado.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()
-            ) {
+          if (resultado && peleaOriginal && String(resultado.ganador) === String(p.ganador)) {
+            if (peleaOriginal.tipo === 'Preliminar') {
               total += 1;
+            } else if (peleaOriginal.tipo === 'Main Card') {
+              if (peleaOriginal.estelar === true) {
+                total += 2;
+                if (
+                  resultado.metodo &&
+                  resultado.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()
+                ) {
+                  total += 1;
+                }
+              } else {
+                total += 2;
+              }
             }
-          } else {
-            total += 2;
           }
-        }
+        });
+
+        tbody.innerHTML += `<tr><td>${user}</td><td>${total}</td></tr>`;
       }
-    });
 
-    tbody.innerHTML += `<tr><td>${user}</td><td>${total}</td></tr>`;
-  });
-
-  document.getElementById('ranking-section').classList.remove('hidden');
-}
-
-</script>
-
+      document.getElementById('ranking-section').classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
 
