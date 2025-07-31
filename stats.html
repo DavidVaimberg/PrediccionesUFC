@@ -58,19 +58,36 @@
 
   const eventos = ["ufc304", "ufcApex108", "ufcApex109"];
   const estadisticas = {};
-  const users = ["david", "esteban", "cabas", "pingon"];
+  const usuariosSet = new Set();
 
   async function cargarEstadisticas() {
-    for (const user of users) {
+    // 1. Carga todas las predicciones de todos los usuarios
+    const predSnap = await db.collection("predicciones").get();
+    const prediccionesPorUsuario = {};
+
+    predSnap.forEach(doc => {
+      const data = doc.data();
+      const { usuario, evento, predicciones } = data;
+
+      usuariosSet.add(usuario);
+
+      if (!prediccionesPorUsuario[usuario]) {
+        prediccionesPorUsuario[usuario] = [];
+      }
+
+      prediccionesPorUsuario[usuario].push({ evento, predicciones });
+    });
+
+    // 2. Calcula estadísticas por usuario
+    for (const usuario of usuariosSet) {
       let totalPuntos = 0;
       let aciertos = 0;
       let totalPeleas = 0;
 
-      for (const evento of eventos) {
-        const predSnap = await db.collection("predicciones").doc(`${user}_${evento}`).get();
-        const resSnap = await db.collection("resultados").doc(evento).get();
+      const registros = prediccionesPorUsuario[usuario] || [];
 
-        const predicciones = predSnap.exists ? predSnap.data().datos : [];
+      for (const { evento, predicciones } of registros) {
+        const resSnap = await db.collection("resultados").doc(evento).get();
         const resultados = resSnap.exists ? resSnap.data() : {};
 
         for (const p of predicciones) {
@@ -81,7 +98,9 @@
             if (p.tipo === 'Preliminar') totalPuntos += 1;
             else if (p.tipo === 'Main Card' && p.estelar === true) {
               totalPuntos += 2;
-              if (r.metodo && r.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()) totalPuntos += 1;
+              if (r.metodo?.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()) {
+                totalPuntos += 1;
+              }
             } else {
               totalPuntos += 2;
             }
@@ -89,7 +108,7 @@
         }
       }
 
-      estadisticas[user] = {
+      estadisticas[usuario] = {
         puntos: totalPuntos,
         aciertos,
         porcentaje: totalPeleas ? ((aciertos / totalPeleas) * 100).toFixed(1) : "0.0"
@@ -104,6 +123,10 @@
     const aciertosBody = document.querySelector("#tabla-aciertos tbody");
     const porcentajeBody = document.querySelector("#tabla-porcentaje tbody");
 
+    puntosBody.innerHTML = "";
+    aciertosBody.innerHTML = "";
+    porcentajeBody.innerHTML = "";
+
     Object.entries(estadisticas).forEach(([user, stats]) => {
       puntosBody.innerHTML += `<tr><td>${user}</td><td>${stats.puntos}</td></tr>`;
       aciertosBody.innerHTML += `<tr><td>${user}</td><td>${stats.aciertos}</td></tr>`;
@@ -116,4 +139,3 @@
 
 </body>
 </html>
-
