@@ -96,6 +96,22 @@
     </div>
   </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyASAZyQrO2m03A46_gILD_tyUenkRn3HXA",
+    authDomain: "prediccionesufc.firebaseapp.com",
+    projectId: "prediccionesufc",
+    storageBucket: "prediccionesufc.appspot.com",
+    messagingSenderId: "372069968923",
+    appId: "1:372069968923:web:cba4dc58e880214dc49cbe",
+    databaseURL: "https://prediccionesufc-default-rtdb.firebaseio.com"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+</script>  
+  
 <script>
 const users = {
   "david": "clave",
@@ -218,7 +234,7 @@ function renderFights() {
 }
 
 
-function submitPredictions() {
+async function submitPredictions() {
   const predictions = [];
   const fights = eventos[currentEvent].peleas;
 
@@ -236,16 +252,25 @@ function submitPredictions() {
     predictions.push({ pelea: f.nombre, tipo: f.tipo, ganador, metodo });
   }
 
-  localStorage.setItem(`predicciones_${currentUser}_${currentEvent}`, JSON.stringify(predictions));
-  alert("Predicciones guardadas correctamente.");
-  document.getElementById('submit-btn').style.display = 'none';
-  showPanel();
+  try {
+    const db = firebase.database();
+    await db.ref(`predicciones/${currentEvent}/${currentUser}`).set(predictions);
+    alert("Predicciones guardadas correctamente.");
+    document.getElementById('submit-btn').style.display = 'none';
+    showPanel(); // Mostrar el panel como antes
+  } catch (error) {
+    console.error("Error al guardar en Firebase:", error);
+    alert("Hubo un problema al guardar. Inténtalo de nuevo.");
+  }
 }
 
+async function showPanel() {
+  const db = firebase.database();
+  const snapshotPred = await db.ref(`predicciones/${currentEvent}/${currentUser}`).get();
+  const snapshotRes = await db.ref(`resultados/${currentEvent}`).get();
 
-function showPanel() {
-  const data = JSON.parse(localStorage.getItem(`predicciones_${currentUser}_${currentEvent}`) || '[]');
-  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${currentEvent}`) || '{}');
+  const data = snapshotPred.val() || [];
+  const resultados = snapshotRes.val() || {};
   const tbody = document.querySelector('#prediction-table tbody');
   const table = document.getElementById('prediction-table');
   const message = document.getElementById('no-predictions');
@@ -265,9 +290,7 @@ function showPanel() {
 
       if (resultado && String(resultado.ganador) === String(p.ganador)) {
         acertado = true;
-        // Buscar la pelea original desde el objeto eventos para acceder a la propiedad estelar
         const peleaOriginal = eventos[currentEvent].peleas.find(f => f.nombre === p.pelea);
-
         if (peleaOriginal.tipo === 'Preliminar') {
           puntos = 1;
         } else if (peleaOriginal.tipo === 'Main Card') {
@@ -277,13 +300,12 @@ function showPanel() {
               resultado.metodo &&
               resultado.metodo.toLowerCase().trim() === (p.metodo || '').toLowerCase().trim()
             ) {
-              puntos += 1; // punto extra por acertar método
+              puntos += 1;
             }
           } else {
             puntos = 2;
           }
         }
-
         aciertos++;
       }
 
@@ -309,7 +331,6 @@ function showPanel() {
 
   document.getElementById('panel-section').classList.remove('hidden');
 }
-
 
 function renderAdminPanel() {
   const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${currentEvent}`) || '{}');
@@ -341,9 +362,10 @@ function renderAdminPanel() {
 }
 
 
-function saveResults() {
-  const results = {};
+async function saveResults() {
+  const db = firebase.database();
   const fights = eventos[currentEvent].peleas;
+  const results = {};
   const lastFive = fights.slice(-5).map(f => f.id);
 
   fights.forEach(f => {
@@ -355,15 +377,24 @@ function saveResults() {
       }
     }
   });
-  localStorage.setItem(`resultados_confirmados_${currentEvent}`, JSON.stringify(results));
-  alert("Resultados guardados correctamente.");
+
+  try {
+    await db.ref(`resultados/${currentEvent}`).set(results);
+    alert("Resultados guardados correctamente en Firebase.");
+  } catch (e) {
+    console.error("Error al guardar resultados:", e);
+    alert("Error al guardar resultados.");
+  }
 }
 
 
-function showRanking() {
+async function showRanking() {
+  const db = firebase.database();
+  const snapshot = await db.ref(`resultados/${currentEvent}`).once('value');
+  const resultados = snapshot.val() || {};
+
   const tbody = document.getElementById('ranking-body');
   tbody.innerHTML = '';
-  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${currentEvent}`) || '{}');
 
   Object.keys(users).forEach(user => {
     if (user === "admin") return;
@@ -398,7 +429,6 @@ function showRanking() {
 
   document.getElementById('ranking-section').classList.remove('hidden');
 }
-
 
 </script>
 
