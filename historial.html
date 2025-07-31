@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Historial de Predicciones</title>
-   <nav style="background:#111; padding:10px; text-align:center;">
+  <nav style="background:#111; padding:10px; text-align:center;">
     <a href="index.html" style="color:white; margin:0 15px;">Inicio</a>
     <a href="stats.html" style="color:white; margin:0 15px;">📊 Estadísticas</a>
   </nav>
@@ -18,6 +18,10 @@
     .acierto { background-color: #d4edda; }
     .fallo { background-color: #f8d7da; }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
 </head>
 <body>
   <div class="content">
@@ -30,21 +34,24 @@
   </div>
 
 <script>
-const users = {
-  "david": "clave",
-  "esteban": "lebron",
-  "cabas": "curry13",
-  "pingon": "pinga",
-  "admin": "1"
+const firebaseConfig = {
+  apiKey: "AIzaSyASAZyQrO2m03A46_gILD_tyUenkRn3HXA",
+  authDomain: "prediccionesufc.firebaseapp.com",
+  projectId: "prediccionesufc",
+  storageBucket: "prediccionesufc.appspot.com",
+  messagingSenderId: "372069968923",
+  appId: "1:372069968923:web:cba4dc58e880214dc49cbe"
 };
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 const eventos = {
   ufc304: "UFC 304 - Whittaker vs de Ridder",
   ufcApex108: "UFC Apex 108 - Taira vs Park",
-  ufcApex109: "UFC Apex 109 - (Ejemplo)"
+  ufcApex109: "UFC Apex 109 - Dolidze vs Hernandez"
 };
 
-// Crear selector de eventos
 const selector = document.getElementById("evento-select");
 Object.entries(eventos).forEach(([key, name]) => {
   const opt = document.createElement("option");
@@ -59,19 +66,26 @@ window.addEventListener("DOMContentLoaded", () => {
   mostrarHistorial();
 });
 
-function mostrarHistorial() {
+async function mostrarHistorial() {
   const evento = selector.value;
-  const resultados = JSON.parse(localStorage.getItem(`resultados_confirmados_${evento}`) || '{}');
   const container = document.getElementById("tabla-container");
+  container.innerHTML = "<p>Cargando...</p>";
+
+  const predSnap = await db.collection("predicciones").where("evento", "==", evento).get();
+  const resSnap = await db.collection("resultados").doc(evento).get();
+  const resultados = resSnap.exists ? resSnap.data() : {};
+
   let html = '';
+  const predPorUsuario = {};
 
-  Object.keys(users).forEach(user => {
-    if (user === "admin") return;
+  predSnap.forEach(doc => {
+    const { usuario, predicciones } = doc.data();
+    if (!predPorUsuario[usuario]) predPorUsuario[usuario] = [];
+    predPorUsuario[usuario].push(...predicciones);
+  });
 
-    const predicciones = JSON.parse(localStorage.getItem(`predicciones_${user}_${evento}`) || '[]');
-    if (predicciones.length === 0) return;
-
-    html += `<h2>Usuario: ${user}</h2>`;
+  Object.entries(predPorUsuario).forEach(([usuario, predicciones]) => {
+    html += `<h2>Usuario: ${usuario}</h2>`;
     html += `<table>
       <thead>
         <tr><th>Pelea</th><th>Predicción</th><th>Método</th><th>Resultado</th><th>Método Real</th><th>✔️</th></tr>
@@ -99,6 +113,5 @@ function mostrarHistorial() {
   container.innerHTML = html || '<p>No hay predicciones para este evento.</p>';
 }
 </script>
-
 </body>
 </html>
